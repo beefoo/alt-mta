@@ -1,23 +1,26 @@
 # -*- coding: utf-8 -*-
 
-# Data source: http://web.mta.info/developers/data/nyct/subway/Stations.csv
-    # Via: http://web.mta.info/developers/developer-data-terms.html#data
+# Data sources: http://web.mta.info/developers/developer-data-terms.html#data
+    # Stations: http://web.mta.info/developers/data/nyct/subway/Stations.csv
+    # Colors: http://web.mta.info/developers/data/colors.csv
 
 import argparse
 import json
 from lib import *
 import math
 import os
+from pprint import pprint
 import sys
 
 # input
 parser = argparse.ArgumentParser()
-parser.add_argument('-in', dest="INPUT_FILE", default="data/Stations.csv", help="Forcings input file")
+parser.add_argument('-stations', dest="STATIONS_FILE", default="data/Stations.csv", help="Forcings input file")
+parser.add_argument('-colors', dest="COLORS_FILE", default="data/colors.csv", help="Forcings input file")
 parser.add_argument('-out', dest="OUTPUT_FILE", default="routes.json", help="JSON output file")
 
 args = parser.parse_args()
 
-headings = {
+stationHeadings = {
     "Station ID": "id",
     "Line": "lineLabel",
     "Stop Name": "label",
@@ -28,13 +31,27 @@ headings = {
     "GTFS Longitude": "lon"
 }
 
+colorHeadings = {
+    "Line/Branch": "lines",
+    "RGB Hex": "hex"
+}
+
 # Retrieve data
-stationData = readCsv(args.INPUT_FILE, headings)
+stationData = readCsv(args.STATIONS_FILE, stationHeadings)
+colorData = readCsv(args.COLORS_FILE, colorHeadings, doParseNumbers=False)
 
 # Parse routes
 for i, station in enumerate(stationData):
     stationData[i]["id"] = str(station["id"])
     stationData[i]["routes"] = str(station["routes"]).split(" ")
+
+# Parse colors
+for i, color in enumerate(colorData):
+    delimeter = "/"
+    if delimeter not in color["lines"]:
+        delimeter = " "
+    colorData[i]["lines"] = color["lines"].split(delimeter)
+    colorData[i]["hex"] = "#" + color["hex"]
 
 routes = [s["routes"] for s in stationData]
 
@@ -115,6 +132,14 @@ for route in routes:
 
     d["stations"] = routeStations
     routeData.append(d)
+
+# Add color to routes
+for i, route in enumerate(routeData):
+    colors = [c for c in colorData if route["id"] in c["lines"]]
+    if len(colors) <= 0:
+        print "No color found for %s" % route["id"]
+    else:
+        routeData[i]["color"] = colors[0]["hex"]
 
 jsonOut = routeData
 

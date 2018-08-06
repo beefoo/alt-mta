@@ -33,7 +33,7 @@ def parseNumbers(arr):
             arr[i][key] = parseNumber(item[key])
     return arr
 
-def readCsv(filename, headings):
+def readCsv(filename, headings, doParseNumbers=True):
     rows = []
     if os.path.isfile(filename):
         with open(filename, 'rb') as f:
@@ -41,5 +41,6 @@ def readCsv(filename, headings):
             reader = csv.DictReader(lines, skipinitialspace=True)
             rows = list(reader)
             rows = parseHeadings(rows, headings)
-            rows = parseNumbers(rows)
+            if doParseNumbers:
+                rows = parseNumbers(rows)
     return rows
