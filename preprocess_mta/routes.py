@@ -14,8 +14,8 @@ import sys
 
 # input
 parser = argparse.ArgumentParser()
-parser.add_argument('-stations', dest="STATIONS_FILE", default="data/Stations.csv", help="Forcings input file")
-parser.add_argument('-colors', dest="COLORS_FILE", default="data/colors.csv", help="Forcings input file")
+parser.add_argument('-stations', dest="STATIONS_FILE", default="data/Stations.csv", help="Stations input file")
+parser.add_argument('-colors', dest="COLORS_FILE", default="data/colors.csv", help="Colors input file")
 parser.add_argument('-out', dest="OUTPUT_FILE", default="routes.json", help="JSON output file")
 
 args = parser.parse_args()
