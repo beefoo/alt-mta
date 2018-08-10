@@ -1,0 +1,10 @@
+{
+  "name": "mta-aligner",
+  "description": "MTA Station aligner",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "devDependencies": {
+    "express": "^4.16.3"
+  }
+}
