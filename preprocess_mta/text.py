@@ -12,7 +12,7 @@ import sys
 # input
 parser = argparse.ArgumentParser()
 parser.add_argument('-in', dest="INPUT_IMAGE", default="data/subway_map_Jul18_2700x3314.jpg", help="Path to input image")
-parser.add_argument('-out', dest="OUTPUT_FILE", default="text.json", help="JSON output file")
+parser.add_argument('-out', dest="OUTPUT_FILE", default="output/text.json", help="JSON output file")
 args = parser.parse_args()
 
 tools = pyocr.get_available_tools()
