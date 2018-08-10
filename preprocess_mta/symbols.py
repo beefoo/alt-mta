@@ -19,6 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-in', dest="INPUT_IMAGE", default="data/subway_map_Jul18_2700x3314.jpg", help="Path to input image")
 parser.add_argument('-dir', dest="INPUT_SYMBOL_DIR", default="data/", help="Path to input symbol directory")
 parser.add_argument('-threshold', dest="THRESHOLD", default=0.75, type=float, help="Matching threshold")
+parser.add_argument('-mout', dest="OUTPUT_IMAGE", default="symbols.png", help="JSON output file")
 parser.add_argument('-out', dest="OUTPUT_FILE", default="symbols.json", help="JSON output file")
 
 args = parser.parse_args()
@@ -85,10 +86,16 @@ for i, symbol in enumerate(symbols):
     print "Found %s symbols for %s" % (len(matches), symbol["path"])
 
 # write image for debugging
-DEBUG_PATH = 'debug/symbol_matches.png'
 for symbol in symbolsData:
     pt = symbol["point"]
     sz = symbol["size"]
     cv2.rectangle(img_rgb, pt, (pt[0] + sz[0], pt[1] + sz[1]), (0,0,255), 1)
-cv2.imwrite(DEBUG_PATH, img_rgb)
-print "Wrote matches to %s" % DEBUG_PATH
+cv2.imwrite(args.OUTPUT_IMAGE, img_rgb)
+print "Wrote matches to %s" % args.OUTPUT_IMAGE
+
+jsonOut = symbolsData[:]
+
+# Write to file
+with open(args.OUTPUT_FILE, 'w') as f:
+    json.dump(jsonOut, f)
+    print "Wrote %s items to %s" % (len(symbolsData), args.OUTPUT_FILE)
