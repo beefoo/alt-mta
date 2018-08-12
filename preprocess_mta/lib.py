@@ -7,6 +7,10 @@ import os
 def distance(p0, p1):
     return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
 
+def hex2rgb(hex):
+    h = hex.lstrip('#')
+    return tuple(int(h[i:i+2], 16) for i in (0, 2 ,4))
+
 def parseHeadings(arr, headings):
     newArr = []
     headingKeys = [key for key in headings]
