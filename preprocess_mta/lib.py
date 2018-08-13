@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import colorsys
 import csv
 import math
 import os
 
 def distance(p0, p1):
     return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
+
+def hex2hsv(hex):
+    r, g, b = hex2rgb(hex)
+    return colorsys.rgb_to_hsv(r, g, b)
 
 def hex2rgb(hex):
     h = hex.lstrip('#')

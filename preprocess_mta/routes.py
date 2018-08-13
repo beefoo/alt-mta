@@ -33,7 +33,7 @@ stationHeadings = {
 
 colorHeadings = {
     "Line/Branch": "lines",
-    "RGB Hex": "hex"
+    "RGB Hex Map": "hex"
 }
 
 # Retrieve data

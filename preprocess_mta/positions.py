@@ -46,6 +46,13 @@ colors = colors.reshape(-1)
 
 # the kernel function
 src = """
+static float d3(int r1, int g1, int b1, int r2, int g2, int b2) {
+    float r = (float) (r2 - r1);
+    float g = (float) (g2 - g1);
+    float b = (float) (b2 - b1);
+    return sqrt(r*r + g*g + b*b);
+}
+
 __kernel void posterize(__global uchar *px, __global uchar *colors, __global uchar *result){
     int w = %d;
     int dim = %d;
@@ -62,7 +69,7 @@ __kernel void posterize(__global uchar *px, __global uchar *colors, __global uch
     int outR = 255;
     int outG = 255;
     int outB = 255;
-    int threshold = 3;
+    float threshold = 10.0;
 
     for(int ci=0; ci<colorLen; ci++) {
         int j = ci * dim;
@@ -70,7 +77,7 @@ __kernel void posterize(__global uchar *px, __global uchar *colors, __global uch
         int cg = colors[j+1];
         int cb = colors[j+2];
 
-        if (abs(cr-r) < threshold && abs(cg-g) < threshold && abs(cb-b) < threshold) {
+        if (d3(r, g, b, cr, cg, cb) < threshold) {
             outR = r;
             outG = g;
             outB = b;
@@ -103,3 +110,4 @@ result = result.reshape(shape)
 # Write new image
 im = Image.fromarray(result, mode="RGB")
 im.save(args.OUTPUT_IMAGE)
+print "Saved image to %s" % args.OUTPUT_IMAGE
