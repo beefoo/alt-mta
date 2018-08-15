@@ -1,6 +1,6 @@
 {
-  "name": "mta-aligner",
-  "description": "MTA Station aligner",
+  "name": "alt-mta",
+  "description": "Alt MTA",
   "scripts": {
     "start": "node server.js"
   },
