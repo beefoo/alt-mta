@@ -6,16 +6,18 @@ import json
 from lib import *
 import math
 import os
-from PIL import Image
+from PIL import Image, ImageDraw
 import numpy as np
 from pprint import pprint
 import sys
 
 # input
 parser = argparse.ArgumentParser()
-parser.add_argument('-data', dest="INPUT_DATA", default="output/routes.json", help="Path to input data")
+parser.add_argument('-data', dest="INPUT_DATA", default="output/routes.json", help="Path to input route data")
+parser.add_argument('-sym', dest="INPUT_SYMBOLS", default="output/symbols.json", help="Path to input symbols data")
 parser.add_argument('-image', dest="INPUT_IMAGE", default="data/subway_map_Jul18_2700x3314.jpg", help="Path to input image")
-parser.add_argument('-out', dest="OUTPUT_IMAGE", default="debug/subway_map_posterized.jpg", help="Image output file")
+parser.add_argument('-thres', dest="COLOR_THRESHOLD", type=float, default=10.0, help="The max 3D RGB distance to match color")
+parser.add_argument('-out', dest="OUTPUT_IMAGE", default="debug/color_matches.jpg", help="Image output file")
 args = parser.parse_args()
 
 os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
@@ -30,15 +32,19 @@ h, w, dim = shape
 px = px.reshape(-1)
 
 # retrieve data
-stationData = []
+routes = []
 with open(args.INPUT_DATA) as f:
-    stationData = json.load(f)
+    routes = json.load(f)
+symbols = []
+with open(args.INPUT_SYMBOLS) as f:
+    symbols = json.load(f)
 
 # retrieve colors
-colors = list(set([s["color"] for s in stationData]))
+colors = list(set([r["color"] for r in routes]))
 colorLen = len(colors)
 # convert to rgb
 colors = [hex2rgb(c) for c in colors]
+routeColors = colors[:]
 # convert to np array of ints
 colors = np.array(colors)
 colors = colors.astype(np.uint8)
@@ -53,7 +59,7 @@ static float d3(int r1, int g1, int b1, int r2, int g2, int b2) {
     return sqrt(r*r + g*g + b*b);
 }
 
-__kernel void posterize(__global uchar *px, __global uchar *colors, __global uchar *result){
+__kernel void findColors(__global uchar *px, __global uchar *colors, __global uchar *result){
     int w = %d;
     int dim = %d;
     int colorLen = %d;
@@ -69,7 +75,7 @@ __kernel void posterize(__global uchar *px, __global uchar *colors, __global uch
     int outR = 255;
     int outG = 255;
     int outB = 255;
-    float threshold = 10.0;
+    float threshold = %f;
 
     for(int ci=0; ci<colorLen; ci++) {
         int j = ci * dim;
@@ -89,16 +95,18 @@ __kernel void posterize(__global uchar *px, __global uchar *colors, __global uch
     result[i+1] = outG;
     result[i+2] = outB;
 }
-""" % (w, dim, colorLen)
+""" % (w, dim, colorLen, args.COLOR_THRESHOLD)
 
 # build program
+print "Building program..."
 ctx, prg, queue = buildProgram(src)
 
 # buffer input and execute program
+print("Finding colors...")
 inPx = getInBuffer(ctx, px)
 inColors = getInBuffer(ctx, colors)
 outResult = getOutBuffer(ctx, px.nbytes)
-prg.posterize(queue, [h, w], None , inPx, inColors, outResult)
+prg.findColors(queue, [h, w], None , inPx, inColors, outResult)
 
 # Copy result
 result = np.empty_like(px)
@@ -107,7 +115,57 @@ copyResult(queue, result, outResult)
 # Convert back to original shape
 result = result.reshape(shape)
 
-# Write new image
+# Convert to image
 im = Image.fromarray(result, mode="RGB")
+draw = ImageDraw.Draw(im)
+
+print("Matching colors to symbols...")
+MATCH_THRESHOLD = 10
+SAMPLE_RADIUS = 5
+
+# Look for symbols that have this color around it
+for i, symbol in enumerate(symbols):
+    sx, sy = tuple(symbol["point"])
+    sw, sh = tuple(symbol["size"])
+
+    # determine bounds
+    x0 = max(sx - SAMPLE_RADIUS, 0)
+    y0 = max(sy - SAMPLE_RADIUS, 0)
+    x1 = min(sx + sw + SAMPLE_RADIUS, w)
+    y1 = min(sy + sh + SAMPLE_RADIUS, h)
+
+    colorMatches = []
+    for color in routeColors:
+
+        # loop through symbol's perimeter and look for color
+        matches = 0
+        for dy in range(y1-y0):
+            for dx in range(x1-x0):
+                y = dy + y0
+                x = dx + x0
+                 # don't include the space in the symbol itself
+                if x < sx or y < sy or x >= sx+sw or y >= sy+sh:
+                    c = result[y, x]
+                    if distance3(color, c) < args.COLOR_THRESHOLD:
+                        matches += 1
+
+        # if we have enough color matches, we can say this symbol belongs to this route
+        if matches >= MATCH_THRESHOLD:
+            colorMatches.append(color)
+
+    # draw color arcs
+    if len(colorMatches) > 0:
+        degreesPerColor = 360.0 / len(colorMatches)
+        degreesFrom = 0.0
+        for color in colorMatches:
+            draw.arc([sx, sy, sx+sw, sy+sh], start=degreesFrom, end=(degreesFrom+degreesPerColor), fill=color)
+            degreesFrom += degreesPerColor
+
+    sys.stdout.write('\r')
+    sys.stdout.write("%s%%" % round(1.0*(i+1)/len(symbols)*100,1))
+    sys.stdout.flush()
+
+# Write new image
+print("Writing image...")
 im.save(args.OUTPUT_IMAGE)
-print "Saved image to %s" % args.OUTPUT_IMAGE
+print("Saved image to %s" % args.OUTPUT_IMAGE)

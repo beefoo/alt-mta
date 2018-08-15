@@ -8,6 +8,12 @@ import os
 def distance(p0, p1):
     return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
 
+def distance3(p0, p1):
+    x = p1[0] - p0[0]
+    y = p1[1] - p0[1]
+    z = p1[2] - p0[2]
+    return math.sqrt(x**2 + y**2 + z**2)
+
 def hex2hsv(hex):
     r, g, b = hex2rgb(hex)
     return colorsys.rgb_to_hsv(r, g, b)
