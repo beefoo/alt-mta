@@ -1,5 +1,5 @@
 // > node server.js 8888
-var port = 8080;
+var port = 2222;
 if (process.argv.length > 2) port = parseInt(process.argv[2]);
 
 const express = require('express');

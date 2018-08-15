@@ -14,3 +14,14 @@
   left: 0;
   background: rgba(255, 255, 255, 0.5);
 }
+
+.symbol {
+  border: 1px solid red;
+  position: absolute;
+  background: rgba(255, 0, 0, 0.4);
+  cursor: pointer;
+}
+.symbol:hover {
+  border: 1px solid green;
+  background: rgba(0, 255, 0, 0.4);
+}
