@@ -4,9 +4,9 @@ var App = (function() {
 
   function App(config) {
     var defaults = {
-      routeData: "../preprocess_mta/output/routes.json",
-      symbolData: "../preprocess_mta/output/symbols.json",
-      saveData: "preprocess_mta/output/routes.json"
+      routeData: "/preprocess_mta/output/routes.json",
+      symbolData: "/preprocess_mta/output/symbols.json",
+      saveData: "/preprocess_mta/output/stations.json"
     };
     this.opt = _.extend({}, defaults, config);
     this.init();
@@ -28,9 +28,23 @@ var App = (function() {
 
       _this.symbols = symbols;
       _this.routes = routes;
+      _this.loadData(routes);
       _this.loadView(symbols, routes);
+      _this.loadListeners();
     });
 
+  };
+
+  App.prototype.loadData = function(routes){
+
+  };
+
+  App.prototype.loadListeners = function(){
+    var _this = this;
+
+    $('#symbols').on('click', '.symbol', function(e){
+      _this.onClickSymbol($(this));
+    });
   };
 
   App.prototype.loadView = function(symbols, routes){
@@ -47,6 +61,13 @@ var App = (function() {
       $container.append($symbol);
     });
     $('#symbols').append($container);
+  };
+
+  App.prototype.onClickSymbol = function($symbol){
+    var index = parseInt($symbol.attr('data-index'));
+    var selected = $symbol.hasClass('selected');
+
+    $symbol.toggleClass('selected');
   };
 
   return App;

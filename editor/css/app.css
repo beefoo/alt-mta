@@ -22,6 +22,39 @@
   cursor: pointer;
 }
 .symbol:hover {
+  border: 1px solid blue;
+  background: rgba(0, 0, 255, 0.4);
+}
+.symbol.selected {
   border: 1px solid green;
   background: rgba(0, 255, 0, 0.4);
+}
+
+.prompt {
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 1rem 1.2rem;
+  background: rgba(200, 200, 200, 0.8);
+}
+.line {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 2.4rem;
+  font-weight: bold;
+  width: 3rem;
+  height: 3rem;
+  text-align: center;
+  line-height: 3rem;
+  border-radius: 50%;
+  margin-right: 1rem;
+  background: gray;
+  color: white;
+}
+.station {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 0.01rem;
 }
