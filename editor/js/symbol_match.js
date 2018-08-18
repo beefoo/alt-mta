@@ -235,7 +235,7 @@ var AppSymbolMatch = (function() {
     var _this = this;
 
     _.each(this.currentURoute.stations, function(station, key){
-      if (station.point[0]===symbol.point[0] && station.point[1]===symbol.point[1]) {
+      if (station.point && station.point[0]===symbol.point[0] && station.point[1]===symbol.point[1]) {
         _this.currentURoute.stations[key] = _.omit(station, ['point', 'size']);
       }
     });
