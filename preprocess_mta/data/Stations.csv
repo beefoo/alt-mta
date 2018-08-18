@@ -415,7 +415,7 @@ Station ID,Complex ID,GTFS Stop ID,Division,Line,Stop Name,Borough,Daytime Route
 412,628,418,IRT,Lexington Av,Fulton St,M,4 5,Subway,40.710368,-74.009509
 413,413,419,IRT,Lexington Av,Wall St,M,4 5,Subway,40.707557,-74.011862
 414,414,420,IRT,Lexington Av,Bowling Green,M,4 5,Subway,40.704817,-74.014065
-415,620,423,IRT,Eastern Pky,Borough Hall,Bk,4 5,Subway,40.692404,-73.990151
+415,620,423,IRT,Lexington Av,Borough Hall,Bk,4 5,Subway,40.692404,-73.990151
 416,416,201,IRT,Lenox - White Plains Rd,Wakefield - 241 St,Bx,2,Elevated,40.903125,-73.85062
 417,417,204,IRT,Lenox - White Plains Rd,Nereid Av,Bx,2 5,Elevated,40.898379,-73.854376
 418,418,205,IRT,Lenox - White Plains Rd,233 St,Bx,2 5,Elevated,40.893193,-73.857473

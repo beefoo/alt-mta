@@ -33,6 +33,7 @@ SYMBOLS = [
     {"image": "symbol_pill_express_hub1.png", "hub": True, "express": True, "threshold": 0.8},
     {"image": "symbol_dot_local_sir.png", "threshold": 0.798},
     {"image": "symbol_dot_local_closed.png", "threshold": 0.95},
+    {"image": "symbol_dot_local_custom1.png", "threshold": 0.95},
     {"image": "symbol_pill_express_hub_custom1.png", "hub": True, "express": True, "threshold": 0.95},
     {"image": "symbol_pill_express_hub_custom2.png", "hub": True, "express": True, "threshold": 0.95},
     {"image": "symbol_pill_express_hub_custom3.png", "hub": True, "express": True, "threshold": 0.95},
@@ -79,8 +80,8 @@ for i, symbol in enumerate(symbols):
         if not exists:
             d = symbol["meta"].copy()
             d.update({
-                "point": m,
-                "size": (w, h)
+                "point": [int(m[0]), int(m[1])],
+                "size": [int(w), int(h)]
             })
             symbolsData.append(d)
     print "Found %s symbols for %s" % (len(matches), symbol["path"])
@@ -89,7 +90,7 @@ for i, symbol in enumerate(symbols):
 for symbol in symbolsData:
     pt = symbol["point"]
     sz = symbol["size"]
-    cv2.rectangle(img_rgb, pt, (pt[0] + sz[0], pt[1] + sz[1]), (0,0,255), 1)
+    cv2.rectangle(img_rgb, tuple(pt), (pt[0] + sz[0], pt[1] + sz[1]), (0,0,255), 1)
 cv2.imwrite(args.OUTPUT_IMAGE, img_rgb)
 print "Wrote matches to %s" % args.OUTPUT_IMAGE
 
