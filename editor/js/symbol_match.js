@@ -33,7 +33,7 @@ var AppSymbolMatch = (function() {
 
       console.log(routes.length + " routes loaded.");
       console.log(symbols.length + " symbols loaded.");
-      console.log(uroutes.length + " user-generated routes loaded.");
+      console.log(_.keys(uroutes).length + " user-generated routes loaded.");
 
       _this.symbols = symbols;
       _this.routes = routes;
@@ -50,23 +50,22 @@ var AppSymbolMatch = (function() {
   AppSymbolMatch.prototype.loadData = function(routes, uroutes){
     // Initialize uroutes
     _.each(routes, function(route){
-      var uroute = _.find(uroutes, function(r){ return r.id === route.id; });
+      var uroute = uroutes[route.id];
 
       // route found, make sure stations exist
       if (uroute) {
         _.each(route.stations, function(station){
-          var ustation = _.find(uroute.stations, function(s){ return s.id === station.id; });
+          var ustation = uroute.stations[station.id];
           if (!ustation) {
-            uroute.stations.push({ id: station.id });
+            uroute.stations[station.id] = {};
           }
         });
 
       // route not found, add empty route and stations
       } else {
-        uroutes.push({
-          id: route.id,
-          stations: _.map(route.stations, function(s){ return {id: s.id}; })
-        })
+        uroutes[route.id] = {
+          stations: _.object(_.map(route.stations, function(s){ return [s.id, {}]; }))
+        }
       }
     });
   };
@@ -125,15 +124,15 @@ var AppSymbolMatch = (function() {
   AppSymbolMatch.prototype.onRouteChange = function(index){
     this.currentRouteIndex = index;
     this.currentRoute = this.routes[index];
-    this.currentURoute = this.uroutes[index];
+    this.currentURoute = this.uroutes[this.currentRoute.id];
 
     // console.log(this.currentURoute)
     $('.symbol').removeClass('selected');
 
     // select symbols for this route
     var symbols = this.symbols;
-    var ustations = _.filter(this.currentURoute.stations, function(s){ return s.point && s.size; });
-    _.each(ustations, function(s){
+    var ustations = _.pick(this.currentURoute.stations, function(s, key) { return s.point && s.size; });
+    _.each(ustations, function(s, key){
       var symbol = _.find(symbols, function(sb){ return sb.point[0]===s.point[0] && sb.point[1]===s.point[1]; });
       if (symbol) {
         symbol.$el.addClass('selected');
@@ -178,22 +177,23 @@ var AppSymbolMatch = (function() {
 
   AppSymbolMatch.prototype.showNextStation = function(){
     this.$station.text("--");
-    var currentUStation = _.find(this.currentURoute.stations, function(s){ return !s.point || !s.size; });
+    var key = _.findKey(this.currentURoute.stations, function(s){ return !s.point || !s.size; });
+    var currentUStation = key ? this.currentURoute.stations[key] : false;
     this.currentUStation = currentUStation;
 
     if (currentUStation) {
-      this.showStation(currentUStation);
+      this.showStation(key);
     } else {
       this.$station.text("[route is complete]");
     }
   };
 
-  AppSymbolMatch.prototype.showStation = function(ustation){
-    var station = _.find(this.currentRoute.stations, function(s){ return s.id===ustation.id; });
+  AppSymbolMatch.prototype.showStation = function(ustationKey){
+    var station = _.find(this.currentRoute.stations, function(s){ return s.id===ustationKey; });
     this.currentStation = station;
 
     if (!station) {
-      console.log("Could not find "+ustation.id);
+      console.log("Could not find "+ustationKey);
       return false;
     }
 
@@ -215,12 +215,12 @@ var AppSymbolMatch = (function() {
     var uroutes = this.uroutes;
     var otherRoutes = _.filter(this.routes, function(r){ return r.color===rcolor && r.id !== rid; });
     _.each(otherRoutes, function(r){
-      var uroute = _.find(uroutes, function(ur){ return r.id===ur.id; });
+      var uroute = uroutes[r.id];
       if (uroute) {
-        _.each(uroute.stations, function(s, i){
-          if (!s.point && s.id===sid) {
-            uroute.stations[i].point = _.clone(symbol.point);
-            uroute.stations[i].size = _.clone(symbol.size);
+        _.each(uroute.stations, function(s, key){
+          if (!s.point && key===sid) {
+            uroute.stations[key].point = _.clone(symbol.point);
+            uroute.stations[key].size = _.clone(symbol.size);
           }
         });
       }
@@ -234,9 +234,9 @@ var AppSymbolMatch = (function() {
     if (!symbol) return false;
     var _this = this;
 
-    _.each(this.currentURoute.stations, function(station, i){
+    _.each(this.currentURoute.stations, function(station, key){
       if (station.point[0]===symbol.point[0] && station.point[1]===symbol.point[1]) {
-        _this.currentURoute.stations[i] = _.omit(station, ['point', 'size']);
+        _this.currentURoute.stations[key] = _.omit(station, ['point', 'size']);
       }
     });
 
