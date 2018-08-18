@@ -40,7 +40,8 @@ SYMBOLS = [
     {"image": "symbol_pill_express_hub_custom4.png", "hub": True, "express": True, "threshold": 0.95},
     {"image": "symbol_pill_express_hub_custom5.png", "hub": True, "express": True, "threshold": 0.95},
     {"image": "symbol_pill_express_hub_custom6.png", "hub": True, "express": True, "threshold": 0.95},
-    {"image": "symbol_pill_local_hub_custom1.png", "hub": True, "threshold": 0.95}
+    {"image": "symbol_pill_local_hub_custom1.png", "hub": True, "threshold": 0.95},
+    {"image": "symbol_pill_local_hub_custom2.png", "hub": True, "threshold": 0.95}
 ]
 
 # Parse symbols
