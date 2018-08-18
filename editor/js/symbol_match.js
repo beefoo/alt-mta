@@ -1,8 +1,8 @@
 'use strict';
 
-var App = (function() {
+var AppSymbolMatch = (function() {
 
-  function App(config) {
+  function AppSymbolMatch(config) {
     var defaults = {
       routeData: "/preprocess_mta/output/routes.json",
       symbolData: "/preprocess_mta/output/symbols.json",
@@ -12,13 +12,14 @@ var App = (function() {
     this.init();
   }
 
-  App.prototype.init = function(){
+  AppSymbolMatch.prototype.init = function(){
     var _this = this;
     var opt = this.opt;
 
     this.$symbols = $('#symbols');
     this.$select = $('#select-line');
     this.$station = $('#station');
+    this.saveDataQueue = [];
 
     $.when(
       $.getJSON(opt.routeData),
@@ -46,7 +47,7 @@ var App = (function() {
 
   };
 
-  App.prototype.loadData = function(routes, uroutes){
+  AppSymbolMatch.prototype.loadData = function(routes, uroutes){
     // Initialize uroutes
     _.each(routes, function(route){
       var uroute = _.find(uroutes, function(r){ return r.id === route.id; });
@@ -70,7 +71,7 @@ var App = (function() {
     });
   };
 
-  App.prototype.loadListeners = function(){
+  AppSymbolMatch.prototype.loadListeners = function(){
     var _this = this;
 
     this.$symbols.on('click', '.symbol', function(e){
@@ -82,7 +83,7 @@ var App = (function() {
     });
   };
 
-  App.prototype.loadView = function(symbols, routes){
+  AppSymbolMatch.prototype.loadView = function(symbols, routes){
     var $container = $('<div />');
 
     _.each(symbols, function(symbol, i){
@@ -106,7 +107,7 @@ var App = (function() {
     });
   };
 
-  App.prototype.onClickSymbol = function($symbol){
+  AppSymbolMatch.prototype.onClickSymbol = function($symbol){
     var index = parseInt($symbol.attr('data-index'));
     var selected = $symbol.hasClass('selected');
 
@@ -117,20 +118,23 @@ var App = (function() {
     } else {
       this.symbolDetach(this.symbols[index]);
     }
+
+    this.saveData();
   };
 
-  App.prototype.onRouteChange = function(index){
+  AppSymbolMatch.prototype.onRouteChange = function(index){
     this.currentRouteIndex = index;
     this.currentRoute = this.routes[index];
     this.currentURoute = this.uroutes[index];
 
+    // console.log(this.currentURoute)
     $('.symbol').removeClass('selected');
 
     // select symbols for this route
     var symbols = this.symbols;
     var ustations = _.filter(this.currentURoute.stations, function(s){ return s.point && s.size; });
     _.each(ustations, function(s){
-      var symbol = _.find(symbols, function(sb){ sb.point[0]===s.point[0] && sb.point[1]===s.point[1]; });
+      var symbol = _.find(symbols, function(sb){ return sb.point[0]===s.point[0] && sb.point[1]===s.point[1]; });
       if (symbol) {
         symbol.$el.addClass('selected');
       }
@@ -139,7 +143,40 @@ var App = (function() {
     this.showNextStation();
   };
 
-  App.prototype.showNextStation = function(){
+  AppSymbolMatch.prototype.saveData = function(){
+    var filename = this.opt.saveData;
+    var data = JSON.parse(JSON.stringify(this.uroutes));
+
+    this.saveDataQueue.push({
+      filename: filename,
+      data: data
+    });
+
+    this.saveQueue();
+  };
+
+  AppSymbolMatch.prototype.saveQueue = function(){
+    if (this.isSaving || !this.saveDataQueue.length) return false;
+    var _this = this;
+
+    this.isSaving = true;
+    var nextData = this.saveDataQueue.shift();
+
+    $.ajax({
+      type: 'POST',
+      url: '/symbol_match/save',
+      data: JSON.stringify(nextData),
+      contentType: 'application/json',
+      complete: function(jqXHR, textStatus){
+        _this.isSaving = false;
+        _this.saveQueue();
+      },
+      success: function(){ console.log('Data saved'); },
+      error: function(){ console.log('Error with saving data'); }
+    });
+  };
+
+  AppSymbolMatch.prototype.showNextStation = function(){
     this.$station.text("--");
     var currentUStation = _.find(this.currentURoute.stations, function(s){ return !s.point || !s.size; });
     this.currentUStation = currentUStation;
@@ -151,7 +188,7 @@ var App = (function() {
     }
   };
 
-  App.prototype.showStation = function(ustation){
+  AppSymbolMatch.prototype.showStation = function(ustation){
     var station = _.find(this.currentRoute.stations, function(s){ return s.id===ustation.id; });
     this.currentStation = station;
 
@@ -163,17 +200,37 @@ var App = (function() {
     this.$station.text(station.label);
   };
 
-  App.prototype.symbolAttach = function(symbol){
+  AppSymbolMatch.prototype.symbolAttach = function(symbol){
     if (!this.currentStation || !symbol) return false;
 
+    // set the symbol's position and size to current station
     this.currentUStation.point = _.clone(symbol.point);
     this.currentUStation.size = _.clone(symbol.size);
-    console.log(this.currentUStation);
+    // console.log(this.currentUStation);
+
+    // find stations in other routes of same color that do not have  position/size defined
+    var rcolor = this.currentRoute.color;
+    var rid = this.currentRoute.id;
+    var sid = this.currentStation.id;
+    var uroutes = this.uroutes;
+    var otherRoutes = _.filter(this.routes, function(r){ return r.color===rcolor && r.id !== rid; });
+    _.each(otherRoutes, function(r){
+      var uroute = _.find(uroutes, function(ur){ return r.id===ur.id; });
+      if (uroute) {
+        _.each(uroute.stations, function(s, i){
+          if (!s.point && s.id===sid) {
+            uroute.stations[i].point = _.clone(symbol.point);
+            uroute.stations[i].size = _.clone(symbol.size);
+          }
+        });
+      }
+    });
+    // console.log(this.uroutes);
 
     this.showNextStation();
   };
 
-  App.prototype.symbolDetach = function(symbol){
+  AppSymbolMatch.prototype.symbolDetach = function(symbol){
     if (!symbol) return false;
     var _this = this;
 
@@ -186,10 +243,10 @@ var App = (function() {
     this.showNextStation();
   };
 
-  return App;
+  return AppSymbolMatch;
 
 })();
 
 $(function() {
-  var app = new App({});
+  var app = new AppSymbolMatch({});
 });

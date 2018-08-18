@@ -5,6 +5,7 @@
     "start": "node server.js"
   },
   "devDependencies": {
+    "body-parser": "^1.18.3",
     "express": "^4.16.3"
   }
 }
