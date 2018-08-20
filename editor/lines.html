@@ -10,24 +10,26 @@
 
   <link rel="stylesheet" href="css/vendor/normalize.css">
   <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/lines.css">
 </head>
 
 <body>
 
   <div id="map" class="map">
     <div class="overlay"></div>
+    <div id="lines" class="lines"></div>
     <div id="symbols" class="symbols"></div>
     <div class="prompt">
       <div class="select">
         <select id="select-line"></select>
       </div>
-      <div id="station" class="text">---</div>
     </div>
   </div>
 
   <script src="js/vendor/jquery-3.3.1.min.js"></script>
   <script src="js/vendor/underscore-min.js"></script>
-  <script src="js/symbol_match.js"></script>
+  <script src="js/vendor/pixi.min.js"></script>
+  <script src="js/lines.js"></script>
 </body>
 
 </html>
