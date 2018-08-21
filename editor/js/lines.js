@@ -41,6 +41,14 @@ var AppLines = (function() {
 
   };
 
+  AppLines.prototype.drawLines = function(){
+    var routes = this.routes;
+
+    _.each(routes, function(route){
+      var g = route.graphics;
+    });
+  };
+
   AppLines.prototype.loadData = function(routes, uroutes){
     // Combined routes and uroutes
     _.each(routes, function(route, i){
@@ -113,6 +121,7 @@ var AppLines = (function() {
       routes[i].graphics = graphics;
     })
     this.$lines.append(app.view);
+    this.drawLines();
   };
 
   AppLines.prototype.onRouteChange = function(index){
