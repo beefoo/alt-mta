@@ -46,6 +46,22 @@ var AppLines = (function() {
 
     _.each(routes, function(route){
       var g = route.graphics;
+      var lineWidth = 5;
+      var color = parseInt("0x" + route.color.slice(1));
+      color = 0x000000;
+      var alpha = 1.0;
+      g.lineStyle(lineWidth, color, alpha);
+      _.each(route.stations, function(station, i){
+        var p = station.point;
+        var s = station.size;
+        var x = p[0] + s[0] * 0.5;
+        var y = p[1] + s[1] * 0.5;
+        if (i===0) {
+          g.moveTo(x, y);
+        } else {
+          g.lineTo(x, y);
+        }
+      });
     });
   };
 
@@ -117,6 +133,7 @@ var AppLines = (function() {
     var app = new PIXI.Application(width, height, {antialias: true, transparent: true});
     _.each(routes, function(route, i){
       var graphics = new PIXI.Graphics();
+      graphics.visible = false;
       app.stage.addChild(graphics);
       routes[i].graphics = graphics;
     })
@@ -125,8 +142,13 @@ var AppLines = (function() {
   };
 
   AppLines.prototype.onRouteChange = function(index){
+    if (this.currentRoute) {
+      this.currentRoute.graphics.visible = false;
+    }
+
     this.currentRouteIndex = index;
     this.currentRoute = this.routes[index];
+    this.currentRoute.graphics.visible = true;
 
     $('.symbol').removeClass('selected');
 

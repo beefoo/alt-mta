@@ -126,9 +126,14 @@ for route in routes:
 
         # Now sort the route
         sortedRouteStations = []
-        for line in sortedLines:
+        for i, line in enumerate(sortedLines):
             sortedRouteStations += line["stations"]
         routeStations = sortedRouteStations[:]
+
+    # Add connections
+    # for i, station in enumerate(routeStations):
+    #     if i < len(routeStations)-1:
+    #         routeStations[i]["connectsTo"] = routeStations[i+1]["id"]
 
     d["stations"] = routeStations
     routeData.append(d)
