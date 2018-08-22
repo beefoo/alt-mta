@@ -15,6 +15,7 @@ import sys
 # input
 parser = argparse.ArgumentParser()
 parser.add_argument('-stations', dest="STATIONS_FILE", default="data/Stations.csv", help="Stations input file")
+parser.add_argument('-routes', dest="ROUTES_FILE", default="data/Routes.csv", help="Routes input file")
 parser.add_argument('-colors', dest="COLORS_FILE", default="data/colors.csv", help="Colors input file")
 parser.add_argument('-out', dest="OUTPUT_FILE", default="output/routes.json", help="JSON output file")
 
@@ -28,9 +29,14 @@ stationHeadings = {
     "Daytime Routes": "routes",
     "Structure": "structure",
     "GTFS Latitude": "lat",
-    "GTFS Longitude": "lon"
-}
+    "GTFS Longitude": "lon",
 
+}
+routeHeadings = {
+    "Station ID": "stationId",
+    "Sort By": "sortBy",
+    "Route": "route"
+}
 colorHeadings = {
     "Line/Branch": "lines",
     "RGB Hex Map": "hex"
@@ -38,12 +44,16 @@ colorHeadings = {
 
 # Retrieve data
 stationData = readCsv(args.STATIONS_FILE, stationHeadings)
+routeOrderData = readCsv(args.ROUTES_FILE, routeHeadings)
 colorData = readCsv(args.COLORS_FILE, colorHeadings, doParseNumbers=False)
 
 # Parse routes
 for i, station in enumerate(stationData):
     stationData[i]["id"] = str(station["id"])
     stationData[i]["routes"] = str(station["routes"]).split(" ")
+for i, route in enumerate(routeOrderData):
+    routeOrderData[i]["route"] = str(route["route"])
+    routeOrderData[i]["stationId"] = str(route["stationId"])
 
 # Parse colors
 for i, color in enumerate(colorData):
@@ -63,77 +73,15 @@ routeData = []
 
 for route in routes:
     d = { "id": route }
+
+    # order the stations via route config
+    routeOrder = [s for s in routeOrderData if s["route"]==route]
+    routeOrder = dict(zip([r["stationId"] for r in routeOrder], [r["sortBy"] for r in routeOrder]))
+
     routeStations = [s for s in stationData if route in s["routes"]]
-    routeStations = sorted(routeStations, key=lambda k: k['id'])
-
-    # break up the route by lines
-    lines = {}
-    for station in routeStations:
-        line = station["lineLabel"]
-        if line not in lines:
-            lines[line] = [station]
-        else:
-            lines[line].append(station)
-
-    lineKeys = [line for line in lines]
-    print "%s route has %s lines" % (route, len(lineKeys))
-
-    if len(lineKeys) > 1:
-        lineData = []
-        for line in lines:
-            lineData.append({
-                "id": line,
-                "stations": lines[line],
-                "first": lines[line][0],
-                "last": lines[line][-1],
-                "isFirst": False,
-                "connectsTo": False
-            })
-
-        # Find the first line:
-        # assume the line with the first station farthest from all the last stations is the first station
-        for i, line in enumerate(lineData):
-            distancesToOtherLines = [
-                {
-                    "id": l["id"],
-                    "distance": distance((l["last"]["lon"], l["last"]["lat"]), (line["first"]["lon"], line["first"]["lat"]))
-                } for l in lineData if l["id"] != line["id"]
-            ]
-            distancesToOtherLines = sorted(distancesToOtherLines, key=lambda k: k['distance'], reverse=True)
-            lineData[i]["distance"] = distancesToOtherLines[0]
-        lineData = sorted(lineData, key=lambda k: k['distance'], reverse=True)
-        lineData[0]["isFirst"] = True
-        # print "The first station: %s" % lineData[0]["first"]["label"]
-
-        # Connect the lines together, starting with the first line
-        sortedLines = [lineData.pop(0)]
-        currentLastStation = sortedLines[0]["last"]
-        while len(lineData) > 0:
-            # find the first station closest to the currentLast station
-            distancesToOtherLines = [
-                {
-                    "index": i,
-                    "id": l["id"],
-                    "last": l["last"],
-                    "distance": distance((currentLastStation["lon"], currentLastStation["lat"]), (l["first"]["lon"], l["first"]["lat"]))
-                } for i, l in enumerate(lineData)
-            ]
-            distancesToOtherLines = sorted(distancesToOtherLines, key=lambda k: k['distance'])
-            closestLine = distancesToOtherLines[0]
-            sortedLines[-1]["connectsTo"] = closestLine["id"]
-            currentLastStation = closestLine["last"]
-            sortedLines.append(lineData.pop(closestLine["index"]))
-
-        # Now sort the route
-        sortedRouteStations = []
-        for i, line in enumerate(sortedLines):
-            sortedRouteStations += line["stations"]
-        routeStations = sortedRouteStations[:]
-
-    # Add connections
-    # for i, station in enumerate(routeStations):
-    #     if i < len(routeStations)-1:
-    #         routeStations[i]["connectsTo"] = routeStations[i+1]["id"]
+    for i, s in enumerate(routeStations):
+        routeStations[i]["sortBy"] = routeOrder[s["id"]]
+    routeStations = sorted(routeStations, key=lambda k: k['sortBy'])
 
     d["stations"] = routeStations
     routeData.append(d)
