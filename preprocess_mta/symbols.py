@@ -17,7 +17,7 @@ import sys
 # input
 parser = argparse.ArgumentParser()
 parser.add_argument('-in', dest="INPUT_IMAGE", default="data/subway_map_Jul18_2700x3314.jpg", help="Path to input image")
-parser.add_argument('-dir', dest="INPUT_SYMBOL_DIR", default="data/", help="Path to input symbol directory")
+parser.add_argument('-dir', dest="INPUT_SYMBOL_DIR", default="data/symbols/", help="Path to input symbol directory")
 parser.add_argument('-threshold', dest="THRESHOLD", default=0.75, type=float, help="Matching threshold")
 parser.add_argument('-mout', dest="OUTPUT_IMAGE", default="output/symbols.png", help="JSON output file")
 parser.add_argument('-out', dest="OUTPUT_FILE", default="output/symbols.json", help="JSON output file")
