@@ -196,11 +196,11 @@ Sort,Station ID,Complex ID,GTFS Stop ID,Division,Line,Stop Name,Borough,Daytime 
 195,196,196,H01,IND,Rockaway,Aqueduct Racetrack,Q,A,At Grade,40.672097,-73.835919
 196,197,197,H02,IND,Rockaway,Aqueduct - N Conduit Av,Q,A,At Grade,40.668234,-73.834058
 197,198,198,H03,IND,Rockaway,Howard Beach - JFK Airport,Q,A,At Grade,40.660476,-73.830301
-198,199,199,H04,IND,Rockaway,Broad Channel,Q,A S,At Grade,40.608382,-73.815925
-199,200,200,H12,IND,Rockaway,Beach 90 St,Q,A S,Viaduct,40.588034,-73.813641
-200,201,201,H13,IND,Rockaway,Beach 98 St,Q,A S,Viaduct,40.585307,-73.820558
-201,202,202,H14,IND,Rockaway,Beach 105 St,Q,A S,Viaduct,40.583209,-73.827559
-202,203,203,H15,IND,Rockaway,Rockaway Park - Beach 116 St,Q,A S,At Grade,40.580903,-73.835592
+198,199,199,H04,IND,Rockaway,Broad Channel,Q,A,At Grade,40.608382,-73.815925
+199,200,200,H12,IND,Rockaway,Beach 90 St,Q,A,Viaduct,40.588034,-73.813641
+200,201,201,H13,IND,Rockaway,Beach 98 St,Q,A,Viaduct,40.585307,-73.820558
+201,202,202,H14,IND,Rockaway,Beach 105 St,Q,A,Viaduct,40.583209,-73.827559
+202,203,203,H15,IND,Rockaway,Rockaway Park - Beach 116 St,Q,A,At Grade,40.580903,-73.835592
 203,204,204,H06,IND,Rockaway,Beach 67 St,Q,A,Viaduct,40.590927,-73.796924
 204,205,205,H07,IND,Rockaway,Beach 60 St,Q,A,Viaduct,40.592374,-73.788522
 205,206,206,H08,IND,Rockaway,Beach 44 St,Q,A,Viaduct,40.592943,-73.776013

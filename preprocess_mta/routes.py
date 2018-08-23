@@ -36,7 +36,8 @@ stationHeadings = {
 routeHeadings = {
     "Station ID": "stationId",
     "Sort By": "sortBy",
-    "Route": "route"
+    "Route": "route",
+    "Group": "groups"
 }
 colorHeadings = {
     "Line/Branch": "lines",
@@ -55,6 +56,18 @@ for i, station in enumerate(stationData):
 for i, route in enumerate(routeOrderData):
     routeOrderData[i]["route"] = str(route["route"])
     routeOrderData[i]["stationId"] = str(route["stationId"])
+    if len(route["groups"]) > 0:
+        routeOrderData[i]["groups"] = str(route["groups"]).split(" ")
+    else:
+        routeOrderData[i]["groups"] = []
+
+
+# get list of unique groups
+groups = [r["groups"] for r in routeOrderData]
+groups = [item for sublist in groups for item in sublist]
+groups = list(set(groups))
+print ("Found %s groups" % len(groups))
+pprint(groups)
 
 # Check for duplicates
 ids = [s["id"] for s in stationData]
@@ -84,12 +97,22 @@ for route in routes:
 
     # order the stations via route config
     routeOrder = [s for s in routeOrderData if s["route"]==route]
-    routeOrder = dict(zip([r["stationId"] for r in routeOrder], [r["sortBy"] for r in routeOrder]))
+    routeOrder = dict(zip([r["stationId"] for r in routeOrder], [r for r in routeOrder]))
 
     routeStations = [s for s in stationData if route in s["routes"]]
+    rgroups = []
     for i, s in enumerate(routeStations):
-        routeStations[i]["sortBy"] = routeOrder[s["id"]]
+        r = routeOrder[s["id"]]
+        routeStations[i]["sortBy"] = r["sortBy"]
+        if len(r["groups"]) > 0:
+            routeStations[i]["groups"] = r["groups"]
+            rgroups += r["groups"]
     routeStations = sorted(routeStations, key=lambda k: k['sortBy'])
+
+    # add groups to route
+    rgroups = list(set(rgroups))
+    if len(rgroups) > 0:
+        d["groups"] = rgroups
 
     d["stations"] = routeStations
     routeData.append(d)

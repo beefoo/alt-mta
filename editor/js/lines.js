@@ -51,17 +51,27 @@ var AppLines = (function() {
       color = 0x000000;
       var alpha = 1.0;
       g.lineStyle(lineWidth, color, alpha);
-      _.each(route.stations, function(station, i){
-        var p = station.point;
-        var s = station.size;
-        var x = p[0] + s[0] * 0.5;
-        var y = p[1] + s[1] * 0.5;
-        if (i===0) {
-          g.moveTo(x, y);
-        } else {
-          g.lineTo(x, y);
-        }
+
+      // get route's groups
+      var groups = [route.stations];
+      if (route.groups && route.groups.length > 1) {
+        groups = route.groups
+      }
+
+      _.each(groups, function(group, i){
+        _.each(group, function(station, j){
+          var p = station.point;
+          var s = station.size;
+          var x = p[0] + s[0] * 0.5;
+          var y = p[1] + s[1] * 0.5;
+          if (j===0) {
+            g.moveTo(x, y);
+          } else {
+            g.lineTo(x, y);
+          }
+        });
       });
+
     });
   };
 
@@ -76,6 +86,17 @@ var AppLines = (function() {
             routes[i].stations[j] = _.extend({}, station, ustation);
           }
         });
+      }
+      if (route.groups && route.groups.length > 0) {
+        var routeGroups = [];
+        var stations = routes[i].stations;
+        _.each(route.groups, function(group){
+          var gstations = _.filter(stations, function(station){
+            return station.groups && _.indexOf(station.groups, group) >= 0;
+          });
+          routeGroups.push(gstations);
+        });
+        routes[i].groups = routeGroups;
       }
     });
     this.routes = routes;
