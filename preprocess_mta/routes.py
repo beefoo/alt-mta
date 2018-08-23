@@ -5,6 +5,7 @@
     # Colors: http://web.mta.info/developers/data/colors.csv
 
 import argparse
+import collections
 import json
 from lib import *
 import math
@@ -54,6 +55,13 @@ for i, station in enumerate(stationData):
 for i, route in enumerate(routeOrderData):
     routeOrderData[i]["route"] = str(route["route"])
     routeOrderData[i]["stationId"] = str(route["stationId"])
+
+# Check for duplicates
+ids = [s["id"] for s in stationData]
+duplicates = [item for item, count in collections.Counter(ids).items() if count > 1]
+if len(duplicates) > 0:
+    print("Warning: %s duplicates found." % len(duplicates))
+    pprint(duplicates)
 
 # Parse colors
 for i, color in enumerate(colorData):
