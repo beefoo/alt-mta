@@ -16,14 +16,26 @@
 <body>
 
   <div id="map" class="map">
-    <div class="overlay"></div>
+    <div id="overlay" class="overlay"></div>
     <div id="lines" class="lines"></div>
     <div id="symbols" class="symbols"></div>
-    <div class="prompt">
-      <div class="select">
-        <select id="select-line"></select>
+    <form class="prompt">
+      <div class="input">
+        <select id="select-line">
+          <option value="-1" selected>All</option>
+        </select>
       </div>
-    </div>
+      <div class="input">
+        <label for="map-opacity">Map opacity
+          <input type="range" id="map-opacity" name="map-opacity" min="0" max="1" value="0.5" step="0.01" />
+        </label>
+      </div>
+      <div class="input">
+        <label for="toggle-map">
+          <input type="checkbox" id="toggle-map" name="toggle-map" value="1" checked /> Toggle map
+        </label>
+      </div>
+    </form>
   </div>
 
   <script src="js/vendor/jquery-3.3.1.min.js"></script>

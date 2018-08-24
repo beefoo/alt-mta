@@ -16,9 +16,12 @@ var AppLines = (function() {
     var opt = this.opt;
 
     this.$map = $('#map');
+    this.$overlay = $('#overlay');
     this.$symbols = $('#symbols');
     this.$lines = $('#lines');
     this.$select = $('#select-line');
+    this.$opacitySelect = $('#map-opacity');
+    this.$toggleMap = $('#toggle-map');
 
     this.saveDataQueue = [];
 
@@ -36,7 +39,7 @@ var AppLines = (function() {
       _this.loadData(routes, uroutes);
       _this.loadView();
       _this.loadListeners();
-      _this.onRouteChange(0);
+      _this.onRouteChange(-1);
     });
 
   };
@@ -48,7 +51,7 @@ var AppLines = (function() {
       var g = route.graphics;
       var lineWidth = 5;
       var color = parseInt("0x" + route.color.slice(1));
-      color = 0x000000;
+      // color = 0x000000;
       var alpha = 1.0;
       g.lineStyle(lineWidth, color, alpha);
 
@@ -109,6 +112,15 @@ var AppLines = (function() {
     this.$select.on('change', function(e){
       _this.onRouteChange(parseInt($(this).val()));
     });
+
+    this.$toggleMap.on('change', function(e){
+      var checked = $(this).is(':checked');
+      _this.toggleMap(checked);
+    });
+
+    $(document).on('input', '#map-opacity', function() {
+      _this.$overlay.css("opacity", 1-_this.$opacitySelect.val());
+    });
   };
 
   AppLines.prototype.loadView = function(){
@@ -144,8 +156,7 @@ var AppLines = (function() {
     // init select route
     var $select = this.$select;
     _.each(routes, function(route, i){
-      var selected = i === 0 ? ' selected' : '';
-      var $option = $('<option value="'+i+'"'+selected+'>'+route.id+'</option>');
+      var $option = $('<option value="'+i+'">'+route.id+'</option>');
       $select.append($option);
     });
 
@@ -163,8 +174,23 @@ var AppLines = (function() {
   };
 
   AppLines.prototype.onRouteChange = function(index){
+    if (index < 0) {
+      _.each(this.routes, function(route){
+        route.graphics.visible = true;
+      });
+      this.currentRouteIndex = index;
+      this.currentRoute = false;
+      $('.symbol').addClass('selected');
+      return false;
+    }
+
     if (this.currentRoute) {
       this.currentRoute.graphics.visible = false;
+
+    } else if (this.currentRouteIndex < 0) {
+      _.each(this.routes, function(route){
+        route.graphics.visible = false;
+      });
     }
 
     this.currentRouteIndex = index;
@@ -177,6 +203,14 @@ var AppLines = (function() {
     _.each(this.currentRoute.stations, function(s){
       $('.symbol[data-id="'+s.id+'"]').addClass('selected');
     });
+  };
+
+  AppLines.prototype.toggleMap = function(on){
+    if (on) {
+      this.$overlay.css("opacity", 1-this.$opacitySelect.val());
+    } else {
+      this.$overlay.css("opacity", 1);
+    }
   };
 
   return AppLines;
