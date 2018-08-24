@@ -6,3 +6,18 @@
   top: 0;
   left: 0;
 }
+
+.symbol {
+  display: none;
+}
+
+.symbol.active {
+  display: block;
+  border: 1px solid blue;
+  background: blue;
+}
+
+.symbol.active.selected {
+  border: 1px solid green;
+  background: green;
+}

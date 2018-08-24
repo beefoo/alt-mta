@@ -22,6 +22,8 @@ var AppLines = (function() {
     this.$select = $('#select-line');
     this.$opacitySelect = $('#map-opacity');
     this.$toggleMap = $('#toggle-map');
+    this.$draggable = $('#draggable');
+    this.$dragWindow = $('#drag-window');
 
     this.saveDataQueue = [];
 
@@ -42,6 +44,50 @@ var AppLines = (function() {
       _this.onRouteChange(-1);
     });
 
+  };
+
+  AppLines.prototype.drag = function(x1, y1){
+    var x0 = this.dragStartX;
+    var y0 = this.dragStartY;
+    var x = x0;
+    var y = y0;
+    var w = x1 - x0;
+    var h = y1 - y0;
+
+    if (w < 0) {
+      x = x1;
+      w = x0 - x1;
+    }
+
+    if (h < 0) {
+      y = y1;
+      h = y0 - y1;
+    }
+
+    this.$dragWindow.css({
+      top: y + "px",
+      left: x + "px",
+      height: h + "px",
+      width: w + "px"
+    });
+  };
+
+  AppLines.prototype.dragEnd = function(){
+    this.dragging = false;
+    this.$dragWindow.removeClass('active');
+  };
+
+  AppLines.prototype.dragStart = function(x, y){
+    this.dragging = true;
+    this.dragStartX = x;
+    this.dragStartY = y;
+    this.$dragWindow.css({
+      top: y + "px",
+      left: x + "px",
+      height: "0px",
+      width: "0px"
+    });
+    this.$dragWindow.addClass('active');
   };
 
   AppLines.prototype.drawLines = function(){
@@ -108,6 +154,7 @@ var AppLines = (function() {
 
   AppLines.prototype.loadListeners = function(){
     var _this = this;
+    var $document = $(document);
 
     this.$select.on('change', function(e){
       _this.onRouteChange(parseInt($(this).val()));
@@ -118,8 +165,28 @@ var AppLines = (function() {
       _this.toggleMap(checked);
     });
 
-    $(document).on('input', '#map-opacity', function() {
+    $document.on('input', '#map-opacity', function() {
       _this.$overlay.css("opacity", 1-_this.$opacitySelect.val());
+    });
+
+    this.$draggable.on('mousedown', function(e){
+      if (_this.currentRoute) {
+        // console.log('down')
+        _this.dragStart(e.pageX, e.pageY);
+      }
+    });
+
+    this.$draggable.on('mousemove', function(e){
+      if (_this.dragging && _this.currentRoute) {
+        _this.drag(e.pageX, e.pageY);
+      }
+    });
+
+    this.$draggable.on('mouseup', function(e){
+      if (_this.currentRoute) {
+        // console.log('up')
+        _this.dragEnd();
+      }
     });
   };
 
@@ -134,11 +201,11 @@ var AppLines = (function() {
     var stations = _.pluck(routes, "stations");
     stations = _.flatten(stations, true);
     stations = _.filter(stations, function(station){ return station.point && station.size; });
-    stations = _.map(stations, function(station){
-      station.point_id = station.point[0] + "_" + station.point[1];
-      return station;
-    });
-    stations = _.uniq(stations, function(station) { return station.point_id; });
+    // stations = _.map(stations, function(station){
+    //   station.point_id = station.point[0] + "_" + station.point[1];
+    //   return station;
+    // });
+    stations = _.uniq(stations, function(station) { return station.id; });
 
     // draw symbols
     _.each(stations, function(station){
@@ -180,7 +247,7 @@ var AppLines = (function() {
       });
       this.currentRouteIndex = index;
       this.currentRoute = false;
-      $('.symbol').addClass('selected');
+      $('.symbol').addClass('active');
       return false;
     }
 
@@ -197,11 +264,11 @@ var AppLines = (function() {
     this.currentRoute = this.routes[index];
     this.currentRoute.graphics.visible = true;
 
-    $('.symbol').removeClass('selected');
+    $('.symbol').removeClass('active');
 
     // select symbols for this route
     _.each(this.currentRoute.stations, function(s){
-      $('.symbol[data-id="'+s.id+'"]').addClass('selected');
+      $('.symbol[data-id="'+s.id+'"]').addClass('active');
     });
   };
 

@@ -20,6 +20,15 @@
   opacity: 0.5;
 }
 
+.draggable {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  cursor: crosshair;
+}
+
 .symbol {
   border: 1px solid red;
   position: absolute;
@@ -59,4 +68,13 @@
   font-size: 1.5rem;
   font-weight: bold;
   letter-spacing: 0.01rem;
+}
+
+.drag-window {
+  display: none;
+  border: 1px solid red;
+  position: absolute;
+}
+.drag-window.active {
+  display: block;
 }
