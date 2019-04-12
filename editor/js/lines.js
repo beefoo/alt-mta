@@ -3,8 +3,8 @@
 var AppLines = (function() {
 
   var opt, routes, uroutes;
-  var $map, $overlay, $symbols, $svg, $select;
-  var $opacitySelect, $toggleMap;
+  var $map, $lines, $overlay, $symbols, $svg, $select;
+  var $opacitySelect, $toggleMap, $toggleLines;
 
   function AppLines(config) {
     var defaults = {
@@ -59,10 +59,12 @@ var AppLines = (function() {
     $map = $('#map');
     $overlay = $('#overlay');
     $symbols = $('#symbols');
+    $lines = $("#lines");
     $svg = $('#svg');
     $select = $('#select-line');
     $opacitySelect = $('#map-opacity');
     $toggleMap = $('#toggle-map');
+    $toggleLines = $('#toggle-lines');
 
     $.when(
       $.getJSON(opt.routeData),
@@ -94,6 +96,11 @@ var AppLines = (function() {
     $toggleMap.on('change', function(e){
       var checked = $(this).is(':checked');
       _this.toggleMap(checked);
+    });
+
+    $toggleLines.on('change', function(e){
+      var checked = $(this).is(':checked');
+      _this.toggleLines(checked);
     });
 
     $document.on('input', '#map-opacity', function() {
@@ -188,6 +195,14 @@ var AppLines = (function() {
         routes[i].groups = routeGroups;
       }
     });
+  };
+
+  AppLines.prototype.toggleLines = function(on){
+    if (on) {
+      $lines.css("opacity", 1);
+    } else {
+      $lines.css("opacity", 0);
+    }
   };
 
   AppLines.prototype.toggleMap = function(on){
