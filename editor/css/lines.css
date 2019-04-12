@@ -21,3 +21,10 @@
   border: 1px solid green;
   background: green;
 }
+
+.route {
+  opacity: 0;
+}
+.route.active {
+  opacity: 1;
+}
