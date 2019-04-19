@@ -10,16 +10,38 @@ var AppLines = (function() {
     var defaults = {
       routeData: "/preprocess_mta/output/routes.json",
       urouteData: "/preprocess_mta/usergen/routes.json",
-      lineWidth: 5
+      lineWidth: 5,
+      curviness: 0.2 // probably between 0.1 and 0.5
     };
     opt = _.extend({}, defaults, config);
     this.init();
   }
 
+  function distance(p1, p2) {
+    var deltaX = p2.x - p1.x;
+    var deltaY = p2.y - p1.y;
+    return Math.hypot(deltaX, deltaY);
+  }
+
+  function radiansBetweenPoints(p1, p2) {
+    var deltaX = p2.x - p1.x;
+    var deltaY = p2.y - p1.y;
+    return Math.atan2(deltaY, deltaX);
+  }
+
+  function translatePoint(p, radians, distance) {
+    var x2 = p.x + distance * Math.cos(radians);
+    var y2 = p.y + distance * Math.sin(radians);
+    return {
+      x: x2,
+      y: y2
+    };
+  }
+
   function routesToHTML(){
     var html = '';
     _.each(routes, function(route, i){
-      html += '<g class="route active" id="route-'+route.id+'">';
+      html += '<g class="route active" id="route-'+route.id+'" stroke="'+route.color+'" stroke-width="'+opt.lineWidth+'" stroke-linecap="round" fill="none">';
 
       // get route's groups
       var groups = [route.stations];
@@ -29,7 +51,7 @@ var AppLines = (function() {
 
       _.each(groups, function(group, i){
         var id = "route-group-" + route.id + (i+1);
-        html += stationsToHTML(group, id, route.color, opt.lineWidth);
+        html += stationsToHTML(group, id);
       });
 
       html += '</g>';
@@ -37,20 +59,51 @@ var AppLines = (function() {
     return html;
   };
 
-  function stationsToHTML(stations, id, strokeColor, strokeWidth) {
+  function stationPosition(station) {
+    var p = station.point;
+    var s = station.size;
+    var x = p[0] + s[0] * 0.5;
+    var y = p[1] + s[1] * 0.5;
+    return {
+      x: x,
+      y: y
+    }
+  }
+
+  function stationsToHTML(stations, id) {
     var d = "";
-    _.each(stations, function(station, j){
-      var p = station.point;
-      var s = station.size;
-      var x = p[0] + s[0] * 0.5;
-      var y = p[1] + s[1] * 0.5;
-      if (j===0) {
-        d += "M"+x+" "+y;
+    var count = stations.length;
+    _.each(stations, function(station, i){
+      var p = stationPosition(station);
+      if (i<=0) {
+        d += "M"+p.x+" "+p.y;
       } else {
-        d += " L "+x+" "+y;
+        var p0 = stationPosition(stations[i-1]); // prev
+        var p2 = (i < count-1) ? stationPosition(stations[i+1]) : false; // next
+        var pd = distance(p0, p);
+        var cpd = pd * opt.curviness;
+        // next exists
+        if (p2 !== false) {
+          var r2 = radiansBetweenPoints(p2, p0);
+          var cp2 = translatePoint(p, r2, cpd);
+          // use shorthand if we're after the 2nd point
+          if (i > 1) {
+            d += " S"+cp2.x+","+cp2.y+" "+p.x+","+p.y;
+          // otherwise, calculate curve
+          } else {
+            var r0 = radiansBetweenPoints(p0, p);
+            var cp0 = translatePoint(p0, r0, cpd);
+            d += " C"+cp0.x+","+cp0.y+" "+cp2.x+","+cp2.y+" "+p.x+","+p.y;
+          }
+        // otherwise we're at the last point
+        } else {
+          var r2 = radiansBetweenPoints(p, p0);
+          var cp2 = translatePoint(p, r2, cpd);
+          d += " S"+cp2.x+","+cp2.y+" "+p.x+","+p.y;
+        }
       }
     });
-    return '<path id="'+id+'" d="'+d+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'" stroke-linecap="round" fill="none" />';
+    return '<path id="'+id+'" d="'+d+'" />';
   }
 
   AppLines.prototype.init = function(){
