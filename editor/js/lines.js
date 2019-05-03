@@ -11,7 +11,7 @@ var AppLines = (function() {
       routeData: "/preprocess_mta/output/routes.json",
       urouteData: "/preprocess_mta/usergen/routes.json",
       lineWidth: 5,
-      curviness: 0.2 // probably between 0.1 and 0.5
+      curviness: 0.3 // probably between 0.1 and 0.5
     };
     opt = _.extend({}, defaults, config);
     this.init();
@@ -21,6 +21,15 @@ var AppLines = (function() {
     var deltaX = p2.x - p1.x;
     var deltaY = p2.y - p1.y;
     return Math.hypot(deltaX, deltaY);
+  }
+
+  function getRouteGroups(route) {
+    // get route's groups
+    var groups = [route.stations];
+    if (route.groups && route.groups.length > 1) {
+      groups = route.groups
+    }
+    return groups;
   }
 
   function radiansBetweenPoints(p1, p2) {
@@ -43,11 +52,7 @@ var AppLines = (function() {
     _.each(routes, function(route, i){
       html += '<g class="route active" id="route-'+route.id+'" stroke="'+route.color+'" stroke-width="'+opt.lineWidth+'" stroke-linecap="round" fill="none">';
 
-      // get route's groups
-      var groups = [route.stations];
-      if (route.groups && route.groups.length > 1) {
-        groups = route.groups
-      }
+      var groups = getRouteGroups(route);
 
       _.each(groups, function(group, i){
         var id = "route-group-" + route.id + (i+1);
@@ -78,29 +83,17 @@ var AppLines = (function() {
       if (i<=0) {
         d += "M"+p.x+" "+p.y;
       } else {
-        var p0 = stationPosition(stations[i-1]); // prev
-        var p2 = (i < count-1) ? stationPosition(stations[i+1]) : false; // next
-        var pd = distance(p0, p);
-        var cpd = pd * opt.curviness;
-        // next exists
-        if (p2 !== false) {
-          var r2 = radiansBetweenPoints(p2, p0);
-          var cp2 = translatePoint(p, r2, cpd);
-          // use shorthand if we're after the 2nd point
-          if (i > 1) {
-            d += " S"+cp2.x+","+cp2.y+" "+p.x+","+p.y;
-          // otherwise, calculate curve
-          } else {
-            var r0 = radiansBetweenPoints(p0, p);
-            var cp0 = translatePoint(p0, r0, cpd);
-            d += " C"+cp0.x+","+cp0.y+" "+cp2.x+","+cp2.y+" "+p.x+","+p.y;
-          }
-        // otherwise we're at the last point
-        } else {
-          var r2 = radiansBetweenPoints(p, p0);
-          var cp2 = translatePoint(p, r2, cpd);
-          d += " S"+cp2.x+","+cp2.y+" "+p.x+","+p.y;
+        var s0 = stations[i-1]; // prev
+        var cp0 = s0.cp[1];
+        var cp2 = station.cp[0];
+        if (!cp0 || !cp2) {
+          console.log("No control point for station " + station.label);
+          console.log(cp0, cp2)
+          return;
         }
+        // use shorthand if possible
+        if (i > 1) d += " S"+cp2.x+","+cp2.y+" "+p.x+","+p.y;
+        else d += " C"+cp0.x+","+cp0.y+" "+cp2.x+","+cp2.y+" "+p.x+","+p.y;
       }
     });
     return '<path id="'+id+'" d="'+d+'" />';
@@ -228,14 +221,18 @@ var AppLines = (function() {
     // Combined routes and uroutes
     _.each(routes, function(route, i){
       var uroute = uroutes[route.id];
-      if (uroute) {
-        _.each(route.stations, function(station, j){
+      // add values to stations
+      _.each(route.stations, function(station, j){
+        routes[i].stations[j].index = j;
+        // add user generated data
+        if (uroute) {
           var ustation = uroute.stations[station.id];
           if (ustation) {
             routes[i].stations[j] = _.extend({}, station, ustation);
           }
-        });
-      }
+        }
+      });
+      // put stations into groups if necessary
       if (route.groups && route.groups.length > 0) {
         var routeGroups = [];
         var stations = routes[i].stations;
@@ -246,6 +243,60 @@ var AppLines = (function() {
           routeGroups.push(gstations);
         });
         routes[i].groups = routeGroups;
+      }
+    });
+
+    // generate control points if they don't exist
+    var autoControlPoints = {};
+    _.each(routes, function(route, i){
+      var groups = getRouteGroups(route);
+      _.each(groups, function(stations, j){
+        var stationCount = stations.length;
+        _.each(stations, function(station, k){
+          if (station.cp && station.cp.length) return;
+          var p = stationPosition(station);
+          // skip if control point already defined
+          var p0 = false, p2 = false, cp0 = false, cp2 = false; // each point will have two control points, except for the beginning and end
+          if (k > 0) p0 = stationPosition(stations[k-1]);
+          if (k < stationCount-1) p2 = stationPosition(stations[k+1]);
+
+          var radians = 0, pd = 0;
+          if (p0 && p2) {
+            radians = radiansBetweenPoints(p2, p0);
+            pd = Math.min(distance(p2, p0), distance(p, p0), distance(p2, p)) * opt.curviness;
+            cp0 = translatePoint(p, radians, pd);
+            cp2 = translatePoint(p, radians, -pd);
+          } else if (p2) {
+            radians = radiansBetweenPoints(p2, p) ; // first point
+            pd = distance(p2, p) * opt.curviness;
+            cp2 = translatePoint(p, radians, -pd);
+          } else if (p0) {
+            radians = radiansBetweenPoints(p, p0) ; // last point
+            pd = distance(p, p0) * opt.curviness;
+            cp0 = translatePoint(p, radians, pd);
+          }
+          if (autoControlPoints[station.id]===undefined || !autoControlPoints[station.id][0] || !autoControlPoints[station.id][1]) {
+            autoControlPoints[station.id] = [cp0, cp2];
+          }
+        });
+      });
+    });
+
+    // add control points to stations
+    _.each(routes, function(route, i){
+      // get route's groups
+      if (route.groups && route.groups.length > 1) {
+        _.each(route.groups, function(stations, j) {
+          _.each(stations, function(station, k) {
+            if (station.cp && station.cp.length) return;
+            routes[i].groups[j][k].cp = autoControlPoints[station.id];
+          });
+        });
+      } else {
+        _.each(route.stations, function(station, k) {
+          if (station.cp && station.cp.length) return;
+          routes[i].stations[k].cp = autoControlPoints[station.id];
+        });
       }
     });
   };
