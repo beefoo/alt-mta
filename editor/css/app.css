@@ -45,12 +45,46 @@
   background: green;
 }
 
+.form {
+  position: fixed;
+  top: 70px;
+  left: 10px;
+  padding: 1rem 1.2rem;
+  background: rgba(200, 200, 200, 0.9);
+  margin: 0;
+  border: 0;
+}
+.form .input {
+  display: block;
+  margin: 1rem 0;
+  vertical-align: middle;
+}
+.form label {
+  min-width: 110px;
+  display: inline-block;
+}
+.form input {
+  display: inline-block;
+  text-indent: 2px;
+  min-width: 90px;
+}
+.form.ne,
+.form.se {
+  left: auto;
+  right: 10px;
+}
+.form.sw,
+.form.se {
+  top: auto;
+  bottom: 10px;
+}
+
 .prompt {
   position: fixed;
   top: 0;
   left: 0;
   padding: 1rem 1.2rem;
-  background: rgba(200, 200, 200, 0.8);
+  background: rgba(200, 200, 200, 0.9);
   margin: 0;
   border: 0;
 }
