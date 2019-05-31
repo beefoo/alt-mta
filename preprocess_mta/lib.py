@@ -48,6 +48,13 @@ def parseNumbers(arr):
             arr[i][key] = parseNumber(item[key])
     return arr
 
+def radiansBetweenPoints(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    deltaX = x2 - x1;
+    deltaY = y2 - y1;
+    return math.atan2(deltaY, deltaX)
+
 def readCsv(filename, headings, doParseNumbers=True):
     rows = []
     if os.path.isfile(filename):
@@ -59,3 +66,9 @@ def readCsv(filename, headings, doParseNumbers=True):
             if doParseNumbers:
                 rows = parseNumbers(rows)
     return rows
+
+def translatePoint(p, radians, distance):
+    x, y = p
+    x2 = x + distance * math.cos(radians)
+    y2 = y + distance * math.sin(radians)
+    return (x2, y2)
