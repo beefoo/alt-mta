@@ -152,6 +152,11 @@ var AppLines = (function() {
     $document.on('input', '#map-opacity', function() {
       $overlay.css("opacity", 1-$opacitySelect.val());
     });
+
+    $document.on('click', '.symbol', function(e) {
+      e.preventDefault();
+      _this.onSymbolClick($(this));
+    });
   };
 
   AppLines.prototype.loadView = function(){
@@ -171,7 +176,7 @@ var AppLines = (function() {
 
     // draw symbols
     _.each(stations, function(station){
-      var $symbol = $('<a href="#" class="symbol" data-id="'+station.id+'"></a>');
+      var $symbol = $('<a href="#" class="symbol" data-id="'+station.id+'" data-index="'+station.index+'" data-rindex="'+station.routeIndex+'"></a>');
       $symbol.css({
         top: station.point[1],
         left: station.point[0],
@@ -217,6 +222,15 @@ var AppLines = (function() {
     });
   };
 
+  AppLines.prototype.onSymbolClick = function($el){
+    var id = $el.attr("data-id");
+    var stationIndex = parseInt($el.attr("data-index"));
+    var routeIndex = parseInt($el.attr("data-rindex"));
+    var station = routes[routeIndex].stations[stationIndex];
+
+    this.showForm(station);
+  };
+
   AppLines.prototype.parseData = function(){
     // Combined routes and uroutes
     _.each(routes, function(route, i){
@@ -224,6 +238,7 @@ var AppLines = (function() {
       // add values to stations
       _.each(route.stations, function(station, j){
         routes[i].stations[j].index = j;
+        routes[i].stations[j].routeIndex = i;
         // add user generated data
         if (uroute) {
           var ustation = uroute.stations[station.id];
@@ -299,6 +314,13 @@ var AppLines = (function() {
         });
       }
     });
+  };
+
+  AppLines.prototype.showForm = function(station){
+    $("#station-index").text(station.id);
+    $('#station-name').val(station.label);
+    $('#station-pos-x').val(station.point[0]);
+    $('#station-pos-y').val(station.point[1]);
   };
 
   AppLines.prototype.toggleLines = function(on){
