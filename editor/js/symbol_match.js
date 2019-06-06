@@ -4,9 +4,9 @@ var AppSymbolMatch = (function() {
 
   function AppSymbolMatch(config) {
     var defaults = {
-      routeData: "/preprocess_mta/output/routes.json",
-      symbolData: "/preprocess_mta/output/symbols.json",
-      saveData: "/preprocess_mta/usergen/routes.json"
+      routeData: "/output/routes.json",
+      symbolData: "/output/symbols.json",
+      saveData: "/usergen/routes.json"
     };
     this.opt = _.extend({}, defaults, config);
     this.init();

@@ -8,8 +8,8 @@ var AppLines = (function() {
 
   function AppLines(config) {
     var defaults = {
-      routeData: "/preprocess_mta/output/routes.json",
-      urouteData: "/preprocess_mta/usergen/routes.json",
+      routeData: "/output/routes.json",
+      urouteData: "/usergen/routes.json",
       lineWidth: 5,
       curviness: 0.3 // probably between 0.1 and 0.5
     };
