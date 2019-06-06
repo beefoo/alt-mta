@@ -20,6 +20,7 @@ parser.add_argument('-out', dest="OUTPUT_FILE", default="output/routes.svg", hel
 parser.add_argument('-linew', dest="LINE_WIDTH", default=5, type=int, help="Line stroke width")
 parser.add_argument('-linec', dest="LINE_CURVINESS", default=0.3, type=float, help="Bigger number is more curvy; probably between 0.1 and 0.5")
 parser.add_argument('-symbolw', dest="SYMBOL_LINE_WIDTH", default=2, type=int, help="Line stroke width for symbols")
+parser.add_argument('-fontsize', dest="FONT_SIZE", default=14, type=int, help="Font size")
 a = parser.parse_args()
 
 # open the map image
@@ -155,6 +156,18 @@ for route in routes:
             stationsDrawn.append(station["id"])
 
 # add text
+texts = dwg.add(dwg.g(id="texts", font_size=a.FONT_SIZE))
+stationsDrawn = []
+for route in routes:
+    rtexts = texts.add(dwg.g(id="text-%s" % route["id"]))
+    for group in route["groups"]:
+        for station in group:
+            if station["id"] in stationsDrawn:
+                continue
+            cx, cy = station["cpoint"]
+            textString = station["label"] + " " + "•".join(station["routes"])
+            rtexts.add(dwg.text(textString, id="text-%s" % station["id"], insert=(cx, cy)))
+            stationsDrawn.append(station["id"])
 
 dwg.save()
 print("Done.")
