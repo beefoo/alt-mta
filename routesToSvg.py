@@ -28,37 +28,7 @@ im = Image.open(a.MAP_IMAGE)
 width, height = im.size
 print("Target size: %s x %s" % (width, height))
 
-# read data
-routes = []
-with open(a.ROUTE_DATA) as f:
-    routes = json.load(f)
-
-uroutes = {}
-with open(a.UROUTE_DATA) as f:
-    uroutes = json.load(f)
-
-# add uroutes to routes
-for i, route in enumerate(routes):
-    id = route["id"]
-    if id not in uroutes:
-        continue
-    uroute = uroutes[id]
-    for j, station in enumerate(route["stations"]):
-        sid = station["id"]
-        if sid not in uroute["stations"]:
-            continue
-        ustation = uroute["stations"][sid]
-        routes[i]["stations"][j].update(ustation)
-
-    stations = routes[i]["stations"]
-    groups = [[s.copy() for s in stations]]
-    # check if we have groups that we need to break up
-    if "groups" in route and len(route["groups"]) > 0:
-        groups = []
-        for group in route["groups"]:
-            gstations = [s.copy() for s in stations if "groups" in s and group in s["groups"]]
-            groups.append(gstations)
-    routes[i]["groups"] = groups
+routes = parseRouteData(a.ROUTE_DATA, a.UROUTE_DATA)
 
 dwg = svg.Drawing(a.OUTPUT_FILE, size=(width, height), profile='full')
 

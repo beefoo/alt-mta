@@ -121,7 +121,7 @@ for route in routes:
 for i, route in enumerate(routeData):
     colors = [c for c in colorData if route["id"] in c["lines"]]
     if len(colors) <= 0:
-        print "No color found for %s" % route["id"]
+        print("No color found for %s" % route["id"])
     else:
         routeData[i]["color"] = colors[0]["hex"]
 
@@ -130,4 +130,4 @@ jsonOut = routeData
 # Write to file
 with open(args.OUTPUT_FILE, 'w') as f:
     json.dump(jsonOut, f)
-    print "Wrote %s items to %s" % (len(routes), args.OUTPUT_FILE)
+    print("Wrote %s items to %s" % (len(routes), args.OUTPUT_FILE))

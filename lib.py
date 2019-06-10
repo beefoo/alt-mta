@@ -2,6 +2,7 @@
 
 import colorsys
 import csv
+import json
 import math
 import os
 
@@ -48,6 +49,41 @@ def parseNumbers(arr):
             arr[i][key] = parseNumber(item[key])
     return arr
 
+def parseRouteData(fn, ufn):
+    # read data
+    routes = []
+    with open(fn) as f:
+        routes = json.load(f)
+
+    uroutes = {}
+    with open(ufn) as f:
+        uroutes = json.load(f)
+
+    # add uroutes to routes
+    for i, route in enumerate(routes):
+        id = route["id"]
+        if id not in uroutes:
+            continue
+        uroute = uroutes[id]
+        for j, station in enumerate(route["stations"]):
+            sid = station["id"]
+            if sid not in uroute["stations"]:
+                continue
+            ustation = uroute["stations"][sid]
+            routes[i]["stations"][j].update(ustation)
+
+        stations = routes[i]["stations"]
+        groups = [[s.copy() for s in stations]]
+        # check if we have groups that we need to break up
+        if "groups" in route and len(route["groups"]) > 0:
+            groups = []
+            for group in route["groups"]:
+                gstations = [s.copy() for s in stations if "groups" in s and group in s["groups"]]
+                groups.append(gstations)
+        routes[i]["groups"] = groups
+
+    return routes
+
 def radiansBetweenPoints(p1, p2):
     x1, y1 = p1
     x2, y2 = p2
@@ -58,7 +94,7 @@ def radiansBetweenPoints(p1, p2):
 def readCsv(filename, headings, doParseNumbers=True):
     rows = []
     if os.path.isfile(filename):
-        with open(filename, 'rb') as f:
+        with open(filename, 'r', encoding="utf8") as f:
             lines = [line for line in f if not line.startswith("#")]
             reader = csv.DictReader(lines, skipinitialspace=True)
             rows = list(reader)
